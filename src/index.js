@@ -12,7 +12,7 @@ async function main() {
     console.error("WebGPU not supported on this device");
     return;
   }
-  
+
   const adapter = await navigator.gpu.requestAdapter();
   if (!adapter) {
     console.error("No adapter found");
@@ -28,7 +28,7 @@ async function main() {
   context.configure({
     device,
     format,
-  })
+  });
 
   const module = device.createShaderModule({
     label: "red triangle",
@@ -47,8 +47,8 @@ async function main() {
       @fragment fn fs() -> @location(0) vec4f {
         return vec4f(1.0, 0.0, 0.0, 1.0);
       }
-    `
-  })
+    `,
+  });
 
   const pipeline = device.createRenderPipeline({
     label: "pipeline",
@@ -66,19 +66,20 @@ async function main() {
 
   /** @type {GPURenderPassDescriptor} */
   const renderPassDescriptor = {
-    label :"canvas render pass",
+    label: "canvas render pass",
     colorAttachments: [
       {
         clearValue: [0.3, 0.3, 0.3, 1],
         loadOp: "clear",
         storeOp: "store",
-      }
-    ]
-  }
+      },
+    ],
+  };
 
   function render() {
-    renderPassDescriptor.colorAttachments[0].view =
-      context.getCurrentTexture().createView();
+    renderPassDescriptor.colorAttachments[0].view = context
+      .getCurrentTexture()
+      .createView();
     const encoder = device.createCommandEncoder({ label: "encoder" });
 
     const pass = encoder.beginRenderPass(renderPassDescriptor);
@@ -93,9 +94,49 @@ async function main() {
   render();
 }
 
+main();
+
 async function fetchFont() {
   const res = await fetch("static/fonts/Inter/Inter_18pt-Medium.ttf");
-  console.log("ok:", res.ok)
+  console.log("ok:", res.ok);
+  const buf = await res.arrayBuffer();
+  const u8Arr = new Uint8Array(buf);
+  const reader = new Reader(u8Arr);
+  return reader;
 }
 
-main();
+class Reader {
+  position = 0;
+  /** @type {Uint8Array} */
+  arr;
+  /**
+   * @param {Uint8Array} u8Arr
+   */
+  constructor(u8Arr) {
+    this.arr = u8Arr;
+  }
+
+  u8() {
+    return data[this.position++];
+  }
+
+  u16() {
+    return ((this.u8() << 8) | this.u8()) >>> 0;
+  }
+
+  u32() {
+    return this.i32() >>> 0;
+  }
+
+  i16() {
+    let number = this.u16();
+    if (number & 0x8000) {
+      number -= 1 << 16;
+    }
+    return number;
+  }
+
+  i32() {
+    return (this.u8() << 24) | (this.u8() << 16) | (this.u8() << 8) | this.u8();
+  }
+}
