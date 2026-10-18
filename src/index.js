@@ -1,4 +1,4 @@
-import { Reader } from "./font-parser.js";
+import { parse } from "opentype.js";
 
 async function main() {
   await fetchFont();
@@ -100,9 +100,8 @@ main();
 
 async function fetchFont() {
   const res = await fetch("static/fonts/Inter/Inter_18pt-Medium.ttf");
-  console.log("ok:", res.ok);
   const buf = await res.arrayBuffer();
-  const u8Arr = new Uint8Array(buf);
-  const reader = new Reader(u8Arr);
-  return reader;
+  const font = parse(buf);
+  console.log("font", font);
+  return font;
 }
