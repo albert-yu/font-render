@@ -1,4 +1,5 @@
 async function main() {
+  await fetchFont();
   // Set up WebGPU
 
   /** @type {HTMLCanvasElement} */
@@ -90,6 +91,11 @@ async function main() {
   }
 
   render();
+}
+
+async function fetchFont() {
+  const res = await fetch("static/fonts/Inter/Inter_18pt-Medium.ttf");
+  console.log("ok:", res.ok)
 }
 
 main();
