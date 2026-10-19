@@ -10,6 +10,13 @@ async function main() {
     console.error("Could not find canvas");
     return;
   }
+  // Set canvas resolution for higher res
+  const cssWidth = canvas.clientWidth;
+  const cssHeight = canvas.clientHeight;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = cssWidth * dpr;
+  canvas.height = cssHeight * dpr;
+
   if (!navigator.gpu) {
     console.error("WebGPU not supported on this device");
     return;
