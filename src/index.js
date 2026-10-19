@@ -32,18 +32,40 @@ async function main() {
     format,
   });
 
+  // biome-ignore format: preserve layout
+  const vertexArray = new Float32Array([
+    // x   y    u    v
+    -0.5, -0.5, 0.0, 0.0,  // b0
+     0.0,  0.5, 0.5, 0.0,  // b1
+     0.5, -0.5, 1.0, 1.0,  // b2
+  ]);
+
+  const vertexBuffer = device.createBuffer({
+    size: vertexArray.byteLength,
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+  });
+  device.queue.writeBuffer(vertexBuffer, 0, vertexArray);
+
   const module = device.createShaderModule({
     label: "red triangle",
     code: /* wgsl */ `
+      struct VertexInput {
+        @location(0) position: vec2f,
+        @location(1) uv: vec2f,
+      }
+
+      struct VertexOutput {
+        @builtin(position) position: vec4f,
+        @location(0) uv: vec2f,
+      }
+
       @vertex fn vs(
-        @builtin(vertex_index) vertexIndex: u32
-      ) -> @builtin(position) vec4f {
-        let pos = array(
-          vec2f(0.0, 0.5),
-          vec2f(-0.5, -0.5),
-          vec2f(0.5, -0.5),
-        );
-        return vec4f(pos[vertexIndex], 0.0, 1.0);
+        input: VertexInput
+      ) -> VertexOutput {
+        var output: VertexOutput;
+        output.position = vec4f(input.position, 0.0, 1.0);
+        output.uv = input.uv;
+        return output;
       }
 
       @fragment fn fs() -> @location(0) vec4f {
@@ -52,12 +74,36 @@ async function main() {
     `,
   });
 
+  const BYTES_PER_FLOAT = 4;
+
+  /**
+   * Four bytes per float, four floats per vertex
+   */
+  const arrayStride = 4 * BYTES_PER_FLOAT;
+
   const pipeline = device.createRenderPipeline({
     label: "pipeline",
     layout: "auto",
     vertex: {
       entryPoint: "vs",
       module,
+      buffers: [
+        {
+          arrayStride,
+          attributes: [
+            {
+              shaderLocation: 0,
+              offset: 0,
+              format: "float32x2",
+            },
+            {
+              shaderLocation: 1,
+              offset: 2 * BYTES_PER_FLOAT,
+              format: "float32x2",
+            },
+          ],
+        },
+      ],
     },
     fragment: {
       entryPoint: "fs",
@@ -85,6 +131,7 @@ async function main() {
     const encoder = device.createCommandEncoder({ label: "encoder" });
 
     const pass = encoder.beginRenderPass(renderPassDescriptor);
+    pass.setVertexBuffer(0, vertexBuffer);
     pass.setPipeline(pipeline);
     pass.draw(3);
     pass.end();
