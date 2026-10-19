@@ -68,7 +68,12 @@ async function main() {
         return output;
       }
 
-      @fragment fn fs() -> @location(0) vec4f {
+      @fragment fn fs(output: VertexOutput) -> @location(0) vec4f {
+        let u = output.uv[0];
+        let v = output.uv[1];
+        if (u * u - v > 0) {
+          discard;
+        }
         return vec4f(1.0, 0.0, 0.0, 1.0);
       }
     `,
