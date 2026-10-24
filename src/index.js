@@ -1,4 +1,5 @@
 import { parse } from "opentype.js";
+import { mat4 } from "webgpu-matrix";
 
 const BYTES_PER_FLOAT = 4;
 
@@ -59,13 +60,7 @@ async function main() {
   });
   device.queue.writeBuffer(vertexBuffer, 0, vertexArray);
 
-  // biome-ignore format: preserve layout
-  const uniformArr = new Float32Array([
-    1.0, 0.0, 0.0, 0.0,
-    0.0, 1.0, 0.0, 0.0,
-    0.0, 0.0, 1.0, 0.0,
-    0.0, 0.0, 0.0, 1.0,
-  ])
+  const uniformArr = mat4.identity();
 
   const uniformBuffer = device.createBuffer({
     size: uniformArr.byteLength,
