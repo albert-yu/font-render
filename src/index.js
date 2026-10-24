@@ -1,7 +1,9 @@
 import { parse } from "opentype.js";
 
+const BYTES_PER_FLOAT = 4;
+
 async function main() {
-  await fetchFont();
+  const font = await fetchFont();
   // Set up WebGPU
 
   /** @type {HTMLCanvasElement} */
@@ -39,6 +41,10 @@ async function main() {
     format,
   });
 
+  // Read the font data
+  const LETTER = "R";
+  console.log(font.charToGlyph(LETTER).path.commands);
+
   // biome-ignore format: preserve layout
   const vertexArray = new Float32Array([
     // x   y    u    v
@@ -53,8 +59,22 @@ async function main() {
   });
   device.queue.writeBuffer(vertexBuffer, 0, vertexArray);
 
+  // biome-ignore format: preserve layout
+  const uniformArr = new Float32Array([
+    1.0, 0.0, 0.0, 0.0,
+    0.0, 1.0, 0.0, 0.0,
+    0.0, 0.0, 1.0, 0.0,
+    0.0, 0.0, 0.0, 1.0,
+  ])
+
+  const uniformBuffer = device.createBuffer({
+    size: uniformArr.byteLength,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  });
+  device.queue.writeBuffer(uniformBuffer, 0, uniformArr);
+
   const module = device.createShaderModule({
-    label: "red triangle",
+    label: "main module",
     code: /* wgsl */ `
       struct VertexInput {
         @location(0) position: vec2f,
@@ -66,11 +86,16 @@ async function main() {
         @location(0) uv: vec2f,
       }
 
+      struct Uniforms {
+        transform: mat4x4<f32>,
+      }
+      @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+
       @vertex fn vs(
         input: VertexInput
       ) -> VertexOutput {
         var output: VertexOutput;
-        output.position = vec4f(input.position, 0.0, 1.0);
+        output.position = uniforms.transform * vec4f(input.position, 0.0, 1.0);
         output.uv = input.uv;
         return output;
       }
@@ -86,7 +111,33 @@ async function main() {
     `,
   });
 
-  const BYTES_PER_FLOAT = 4;
+  const bindGroupLayout = device.createBindGroupLayout({
+    label: "uniform bind group layout",
+    entries: [
+      {
+        binding: 0,
+        visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+        buffer: { type: "uniform" },
+      },
+    ],
+  });
+
+  const bindGroup = device.createBindGroup({
+    label: "uniform bind group",
+    layout: bindGroupLayout,
+    entries: [
+      {
+        binding: 0,
+        resource: {
+          buffer: uniformBuffer,
+        },
+      },
+    ],
+  });
+
+  const pipelineLayout = device.createPipelineLayout({
+    bindGroupLayouts: [bindGroupLayout],
+  });
 
   /**
    * Four bytes per float, four floats per vertex
@@ -95,7 +146,7 @@ async function main() {
 
   const pipeline = device.createRenderPipeline({
     label: "pipeline",
-    layout: "auto",
+    layout: pipelineLayout,
     vertex: {
       entryPoint: "vs",
       module,
@@ -145,6 +196,7 @@ async function main() {
     const pass = encoder.beginRenderPass(renderPassDescriptor);
     pass.setVertexBuffer(0, vertexBuffer);
     pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bindGroup);
     pass.draw(3);
     pass.end();
 
@@ -161,6 +213,5 @@ async function fetchFont() {
   const res = await fetch("static/fonts/Inter/Inter_18pt-Medium.ttf");
   const buf = await res.arrayBuffer();
   const font = parse(buf);
-  console.log("font", font);
   return font;
 }
