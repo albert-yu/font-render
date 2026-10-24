@@ -1,5 +1,5 @@
 import { parse } from "opentype.js";
-import { mat4 } from "webgpu-matrix";
+import { mat4, vec3 } from "webgpu-matrix";
 
 const BYTES_PER_FLOAT = 4;
 
@@ -42,16 +42,12 @@ async function main() {
     format,
   });
 
-  // Read the font data
-  const LETTER = "R";
-  console.log(font.charToGlyph(LETTER).path.commands);
-
   // biome-ignore format: preserve layout
   const vertexArray = new Float32Array([
     // x   y    u    v
-    -0.5, -0.5, 0.0, 0.0,  // b0
-     0.0,  0.5, 0.5, 0.0,  // b1
-     0.5, -0.5, 1.0, 1.0,  // b2
+    -1.0, -1.0, 0.0, 0.0,  // b0
+     0.0,  1.0, 0.5, 0.0,  // b1
+     1.0, -1.0, 1.0, 1.0,  // b2
   ]);
 
   const vertexBuffer = device.createBuffer({
@@ -66,7 +62,6 @@ async function main() {
     size: uniformArr.byteLength,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
-  device.queue.writeBuffer(uniformBuffer, 0, uniformArr);
 
   const module = device.createShaderModule({
     label: "main module",
@@ -182,7 +177,19 @@ async function main() {
     ],
   };
 
+  // Read the font data
+  const LETTER = "R";
+  const glyph = font.charToGlyph(LETTER);
+  console.log(glyph.path.commands);
+
+  const { xMin, xMax, yMin, yMax } = glyph;
+  // const normalized = 1 / (yMax - yMin);
+  const normalized = 1 / 4;
+  const scale = vec3.create(normalized, normalized, normalized);
+  mat4.scale(uniformArr, scale, uniformArr);
+
   function render() {
+    device.queue.writeBuffer(uniformBuffer, 0, uniformArr);
     renderPassDescriptor.colorAttachments[0].view = context
       .getCurrentTexture()
       .createView();
