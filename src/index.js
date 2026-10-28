@@ -1,5 +1,6 @@
 import { parse } from "opentype.js";
 import { mat4, vec3 } from "webgpu-matrix";
+import shaderCode from "./shader.wgsl?raw";
 
 const BYTES_PER_FLOAT = 4;
 
@@ -56,49 +57,16 @@ async function main() {
   });
   device.queue.writeBuffer(vertexBuffer, 0, vertexArray);
 
-  const uniformArr = mat4.identity();
+  const transform = mat4.identity();
 
   const uniformBuffer = device.createBuffer({
-    size: uniformArr.byteLength,
+    size: transform.byteLength,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
   const module = device.createShaderModule({
     label: "main module",
-    code: /* wgsl */ `
-      struct VertexInput {
-        @location(0) position: vec2f,
-        @location(1) uv: vec2f,
-      }
-
-      struct VertexOutput {
-        @builtin(position) position: vec4f,
-        @location(0) uv: vec2f,
-      }
-
-      struct Uniforms {
-        transform: mat4x4<f32>,
-      }
-      @group(0) @binding(0) var<uniform> uniforms: Uniforms;
-
-      @vertex fn vs(
-        input: VertexInput
-      ) -> VertexOutput {
-        var output: VertexOutput;
-        output.position = uniforms.transform * vec4f(input.position, 0.0, 1.0);
-        output.uv = input.uv;
-        return output;
-      }
-
-      @fragment fn fs(output: VertexOutput) -> @location(0) vec4f {
-        let u = output.uv[0];
-        let v = output.uv[1];
-        if (u * u - v > 0) {
-          discard;
-        }
-        return vec4f(1.0, 0.0, 0.0, 1.0);
-      }
-    `,
+    code: shaderCode,
   });
 
   const bindGroupLayout = device.createBindGroupLayout({
@@ -183,13 +151,13 @@ async function main() {
   console.log(glyph.path.commands);
 
   const { xMin, xMax, yMin, yMax } = glyph;
+
   // const normalized = 1 / (yMax - yMin);
-  const normalized = 1 / 4;
-  const scale = vec3.create(normalized, normalized, normalized);
-  mat4.scale(uniformArr, scale, uniformArr);
+  // const scale = vec3.create(normalized, normalized, normalized);
+  // mat4.scale(transform, scale, transform);
 
   function render() {
-    device.queue.writeBuffer(uniformBuffer, 0, uniformArr);
+    device.queue.writeBuffer(uniformBuffer, 0, transform);
     renderPassDescriptor.colorAttachments[0].view = context
       .getCurrentTexture()
       .createView();
