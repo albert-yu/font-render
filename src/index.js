@@ -221,12 +221,16 @@ function convertCommandsToCurves(commands) {
   /** @type Curve[] */
   const curves = [];
   let xCurr = 0,
-    yCurr = 0;
+    yCurr = 0,
+    xStart = 0,
+    yStart = 0;
   for (const cmd of commands) {
     switch (cmd.type) {
       case "M":
         xCurr = cmd.x;
         yCurr = cmd.y;
+        xStart = cmd.x;
+        yStart = cmd.y;
         break;
       case "L":
         curves.push({
@@ -253,6 +257,16 @@ function convertCommandsToCurves(commands) {
         yCurr = cmd.y;
         break;
       case "Z":
+        // close the curve
+        curves.push({
+          x0: xCurr,
+          y0: yCurr,
+          x1: (xStart + xCurr) / 2,
+          y1: (yStart + yCurr) / 2,
+          x2: xStart,
+          y2: yStart,
+        });
+        break;
       case "C":
       // unhandled
       default:
