@@ -2,6 +2,8 @@ import { parse } from "opentype.js";
 import { mat4, vec3 } from "webgpu-matrix";
 import shaderCode from "./shader.wgsl?raw";
 
+/** @import { PathCommand } from "opentype.js" */
+
 const BYTES_PER_FLOAT = 4;
 
 async function main() {
@@ -148,11 +150,11 @@ async function main() {
   // Read the font data
   const LETTER = "R";
   const glyph = font.charToGlyph(LETTER);
-  console.log(glyph.path.commands);
+  console.log(glyph.path.commands, glyph.numberOfContours);
 
   const { xMin, xMax, yMin, yMax } = glyph;
 
-  // const normalized = 1 / (yMax - yMin);
+  // const normalized = 1 / (ymax - ymin);
   // const scale = vec3.create(normalized, normalized, normalized);
   // mat4.scale(transform, scale, transform);
 
@@ -184,4 +186,57 @@ async function fetchFont() {
   const buf = await res.arrayBuffer();
   const font = parse(buf);
   return font;
+}
+
+/**
+ * @typedef {{ x0: number; y0: number; x1: number; y1: number; x2: number; y2: number }} Curve
+ */
+
+/**
+ * @param {PathCommand[]} commands
+ * @returns Curve[]
+ */
+function convertCommandsToCurves(commands) {
+  /** @type Curve[] */
+  const curves = [];
+  let xCurr = 0,
+    yCurr = 0;
+  for (const cmd of commands) {
+    switch (cmd.type) {
+      case "M":
+        xCurr = cmd.x;
+        yCurr = cmd.y;
+        break;
+      case "L":
+        curves.push({
+          x0: xCurr,
+          y0: yCurr,
+          x1: (cmd.x + xCurr) / 2,
+          y1: (cmd.y + yCurr) / 2,
+          x2: cmd.x,
+          y2: cmd.y,
+        });
+        xCurr = cmd.x;
+        yCurr = cmd.y;
+        break;
+      case "Q":
+        curves.push({
+          x0: xCurr,
+          y0: yCurr,
+          x1: cmd.x1,
+          y1: cmd.y1,
+          x2: cmd.x,
+          y2: cmd.y,
+        });
+        xCurr = cmd.x;
+        yCurr = cmd.y;
+        break;
+      case "Z":
+      case "C":
+      // unhandled
+      default:
+        break;
+    }
+  }
+  return curves;
 }
