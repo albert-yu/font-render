@@ -70,30 +70,64 @@ async function main() {
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
+  // Read the font data
+  const LETTER = "R";
+  const glyph = font.charToGlyph(LETTER);
+  const curves = convertCommandsToCurves(glyph.path.commands);
+  console.log(glyph.path.commands, curves);
+
+  // convert curves into float array
+  const FLOATS_PER_CURVE = 6;
+  const curveData = new Float32Array(curves.length * FLOATS_PER_CURVE);
+  for (let i = 0; i < curves.length; i++) {
+    const curve = curves[i];
+    curveData.set(
+      [curve.x0, curve.y0, curve.x1, curve.y1, curve.x2, curve.y2],
+      FLOATS_PER_CURVE * i,
+    );
+  }
+
+  const curveBuffer = device.createBuffer({
+    size: curveData.byteLength,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+  });
+  device.queue.writeBuffer(curveBuffer, 0, curveData);
+
   const module = device.createShaderModule({
     label: "main module",
     code: shaderCode,
   });
 
   const bindGroupLayout = device.createBindGroupLayout({
-    label: "uniform bind group layout",
+    label: "bind group layout",
     entries: [
       {
         binding: 0,
         visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
         buffer: { type: "uniform" },
       },
+      {
+        binding: 1,
+        visibility: GPUShaderStage.FRAGMENT,
+        buffer: { type: "read-only-storage" },
+      },
     ],
   });
 
   const bindGroup = device.createBindGroup({
-    label: "uniform bind group",
+    label: "bind group",
     layout: bindGroupLayout,
     entries: [
       {
         binding: 0,
         resource: {
           buffer: uniformBuffer,
+        },
+      },
+      {
+        binding: 1,
+        resource: {
+          buffer: curveBuffer,
         },
       },
     ],
@@ -150,11 +184,6 @@ async function main() {
       },
     ],
   };
-
-  // Read the font data
-  const LETTER = "R";
-  const glyph = font.charToGlyph(LETTER);
-  console.log(glyph.path.commands, glyph.numberOfContours);
 
   const { xMin, xMax, yMin, yMax } = glyph;
 
