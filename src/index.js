@@ -1,5 +1,5 @@
 import { parse } from "opentype.js";
-import { mat4, vec3 } from "webgpu-matrix";
+import { mat4 } from "webgpu-matrix";
 import shaderCode from "./shader.wgsl?raw";
 
 /** @import { PathCommand } from "opentype.js" */
@@ -49,13 +49,18 @@ async function main() {
     format,
   });
 
+  const FLOATS_PER_VERTEX = 4;
   // biome-ignore format: preserve layout
   const vertexArray = new Float32Array([
-    // x   y    u    v
-    -1.0, -1.0, 0.0, 0.0,  // b0
-     0.0,  1.0, 0.5, 0.0,  // b1
-     1.0, -1.0, 1.0, 1.0,  // b2
-  ]);
+    // quad
+    -1.0,  1.0, 0.0, 0.0,
+    -1.0, -1.0, 0.5, 0.0,
+     1.0, -1.0, 1.0, 1.0,
+
+     1.0, -1.0, 0.0, 0.0,
+     1.0,  1.0, 0.5, 0.0,
+    -1.0,  1.0, 1.0, 1.0,
+  ])
 
   const vertexBuffer = device.createBuffer({
     size: vertexArray.byteLength,
@@ -140,7 +145,7 @@ async function main() {
   /**
    * Four bytes per float, four floats per vertex
    */
-  const arrayStride = 4 * BYTES_PER_FLOAT;
+  const arrayStride = FLOATS_PER_VERTEX * BYTES_PER_FLOAT;
 
   const pipeline = device.createRenderPipeline({
     label: "pipeline",
@@ -297,8 +302,7 @@ function convertCommandsToCurves(commands) {
         });
         break;
       case "C":
-      // unhandled
-      default:
+        // unhandled
         break;
     }
   }
