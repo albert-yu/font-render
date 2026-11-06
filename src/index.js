@@ -49,17 +49,17 @@ async function main() {
     format,
   });
 
-  const FLOATS_PER_VERTEX = 4;
+  const FLOATS_PER_VERTEX = 2;
   // biome-ignore format: preserve layout
   const vertexArray = new Float32Array([
     // quad
-    -1.0,  1.0, 0.0, 0.0,
-    -1.0, -1.0, 0.5, 0.0,
-     1.0, -1.0, 1.0, 1.0,
+    -1.0,  1.0,
+    -1.0, -1.0,
+     1.0, -1.0,
 
-     1.0, -1.0, 0.0, 0.0,
-     1.0,  1.0, 0.5, 0.0,
-    -1.0,  1.0, 1.0, 1.0,
+     1.0, -1.0,
+     1.0,  1.0,
+    -1.0,  1.0,
   ])
 
   const vertexBuffer = device.createBuffer({
@@ -162,11 +162,6 @@ async function main() {
               offset: 0,
               format: "float32x2",
             },
-            {
-              shaderLocation: 1,
-              offset: 2 * BYTES_PER_FLOAT,
-              format: "float32x2",
-            },
           ],
         },
       ],
@@ -190,11 +185,7 @@ async function main() {
     ],
   };
 
-  const { xMin, xMax, yMin, yMax } = glyph;
-
-  // const normalized = 1 / (ymax - ymin);
-  // const scale = vec3.create(normalized, normalized, normalized);
-  // mat4.scale(transform, scale, transform);
+  // const { xMin, xMax, yMin, yMax } = glyph;
 
   function render() {
     device.queue.writeBuffer(uniformBuffer, 0, transform);
@@ -207,7 +198,7 @@ async function main() {
     pass.setVertexBuffer(0, vertexBuffer);
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
-    pass.draw(3);
+    pass.draw(6);
     pass.end();
 
     const commandBuffer = encoder.finish();
