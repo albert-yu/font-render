@@ -30,8 +30,8 @@ struct Curve {
 @fragment fn fs(output: VertexOutput) -> @location(0) vec4f {
   let curveCount = arrayLength(&curves);
 
-  let x = output.x;
-  let y = output.y;
+  let x = output.position.x;
+  let y = output.position.y;
 
   var winding = 0;
 
