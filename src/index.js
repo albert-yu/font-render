@@ -217,27 +217,6 @@ async function fetchFont() {
   return font;
 }
 
-// quadratic Bezier solutions
-// see https://github.com/GreenLightning/gpu-font-rendering/blob/master/readme.md
-//
-// Simplified substituted quadratic formula:
-// (b +- sqrt(b^2 - ac)) / a
-// where a = y0 - 2y1 + y2
-//       b = y0 - y1
-//       c = y0
-//
-// d/dt of Cy(t0) = -2 * sqrt(b^2 - ac)
-//   which is always <= 0
-// d/dt of Cy(t1) =  2 * sqrt(b^2 - ac)
-//   which is always >= 0
-//
-// By construction, the filled area is always to the right of the
-// curve. So if the curve goes up (derivative is >=0), the left-to-right
-// ray intersects the curve at an entrance. Otherwise, the ray
-// intersects the curve at an exit.
-// The above shows that d/dt >= 0 iff t1, and d/dt <= 0 iff t0.
-// So t1 is always an entrance, and t0 is always an exit.
-
 /**
  * @param {PathCommand[]} commands
  * @returns Curve[]
