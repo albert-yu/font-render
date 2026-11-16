@@ -4,6 +4,7 @@ struct VertexInput {
 
 struct VertexOutput {
   @builtin(position) position: vec4f,
+  @location(0) glyphPos: vec2f,
 }
 
 struct Uniforms {
@@ -24,6 +25,7 @@ struct Curve {
 ) -> VertexOutput {
   var output: VertexOutput;
   output.position = uniforms.transform * vec4f(input.position, 0.0, 1.0);
+  output.glyphPos = input.position;
   return output;
 }
 
@@ -34,7 +36,7 @@ fn computeX(x0: f32, x1: f32, x2: f32, t: f32) -> f32 {
 @fragment fn fs(output: VertexOutput) -> @location(0) vec4f {
   let curveCount = arrayLength(&curves);
 
-  let pos = output.position.xy;
+  let pos = output.glyphPos.xy;
 
   var winding = 0;
 

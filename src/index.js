@@ -49,17 +49,24 @@ async function main() {
     format,
   });
 
+  // Read the font data
+  const LETTER = "R";
+  const glyph = font.charToGlyph(LETTER);
+  const curves = convertCommandsToCurves(glyph.path.commands);
+  console.log(glyph.path.commands, curves);
+  const { xMin = 0, xMax = 0, yMin = 0, yMax = 0 } = glyph;
+
   const FLOATS_PER_VERTEX = 2;
   // biome-ignore format: preserve layout
   const vertexArray = new Float32Array([
     // quad
-    -1.0,  1.0,
-    -1.0, -1.0,
-     1.0, -1.0,
+    xMin, yMax,
+    xMin, yMin,
+    xMax, yMin,
 
-     1.0, -1.0,
-     1.0,  1.0,
-    -1.0,  1.0,
+    xMax, yMin,
+    xMax, yMax,
+    xMin, yMax,
   ])
 
   const vertexBuffer = device.createBuffer({
@@ -68,18 +75,25 @@ async function main() {
   });
   device.queue.writeBuffer(vertexBuffer, 0, vertexArray);
 
-  const transform = mat4.identity();
+  const glyphH = yMax - yMin;
+  const centerX = (xMin + xMax) / 2;
+  const centerY = (yMin + yMax) / 2;
+  const viewHeight = glyphH * 1.5;
+  const viewWidth = (viewHeight * canvas.width) / canvas.height;
+
+  const transform = mat4.ortho(
+    centerX - viewWidth / 2,
+    centerX + viewWidth / 2,
+    centerY - viewHeight / 2,
+    centerY + viewHeight / 2,
+    -1,
+    1,
+  );
 
   const uniformBuffer = device.createBuffer({
     size: transform.byteLength,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
-
-  // Read the font data
-  const LETTER = "R";
-  const glyph = font.charToGlyph(LETTER);
-  const curves = convertCommandsToCurves(glyph.path.commands);
-  console.log(glyph.path.commands, curves);
 
   // convert curves into float array
   const FLOATS_PER_CURVE = 6;
