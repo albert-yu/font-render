@@ -30,21 +30,22 @@ struct Curve {
 @fragment fn fs(output: VertexOutput) -> @location(0) vec4f {
   let curveCount = arrayLength(&curves);
 
-  let x = output.position.x;
-  let y = output.position.y;
+  let pos = output.position.xy;
 
   var winding = 0;
 
   for (var i = 0u; i < curveCount; i++) {
     let curve = curves[i];
-    let x0 = curve.p0.x;
-    // Subtract coordinates by y
-    // so that our ray is x = 0
-    let y0 = curve.p0.y - y;
-    let x1 = curve.p1.x;
-    let y1 = curve.p1.y - y;
-    let x2 = curve.p2.x;
-    let y2 = curve.p2.y - y;
+    // offset by pos
+    let p0 = curve.p0 - pos;
+    let p1 = curve.p1 - pos;
+    let p2 = curve.p2 - pos;
+    let x0 = p0.x;
+    let y0 = p0.y;
+    let x1 = p1.x;
+    let y1 = p1.y;
+    let x2 = p2.x;
+    let y2 = p2.y;
 
     // Quadratic Bezier solutions
     // see https://github.com/GreenLightning/gpu-font-rendering/blob/master/readme.md
