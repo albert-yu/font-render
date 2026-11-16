@@ -85,6 +85,8 @@ fn computeX(x0: f32, x1: f32, x2: f32, t: f32) -> f32 {
 
     if (t0 <= 1 && t0 >= 0) {
       let xt0 = computeX(x0, x1, x2, t0);
+      // Comparing > 0, since we centered
+      // all of the curve points w.r.t. pos
       if (xt0 > 0) {
         winding = winding + 1;
       }
