@@ -30,7 +30,7 @@ struct Curve {
 }
 
 fn computeX(x0: f32, x1: f32, x2: f32, t: f32) -> f32 {
-  return (1-t)*(1-t) * x0 + 2*t*(1-t) * x1 + t*t * x2;
+  return (1-t)*(1-t) * x0 + 2*t*(1-t)*x1 + t*t*x2;
 }
 
 @fragment fn fs(output: VertexOutput) -> @location(0) vec4f {
@@ -104,6 +104,6 @@ fn computeX(x0: f32, x1: f32, x2: f32, t: f32) -> f32 {
   if (winding == 0) {
     discard;
   }
-  return vec4f(1.0, 0.0, 0.0, 1.0);
+  return vec4f(1.0, 1.0, 1.0, 1.0);
 }
 
