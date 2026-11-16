@@ -67,8 +67,26 @@ fn computeX(x0: f32, x1: f32, x2: f32, t: f32) -> f32 {
     let c = y0;
 
     let real = (b*b - a*c) >= 0;
-    let nonZeroDivisor = a != 0;
-    if (!real || !nonZeroDivisor) {
+    if (!real) {
+      continue;
+    }
+    if (abs(a) < 1e-3) {
+      // a = 0, linear case,
+      // B = -2b, so
+      // Bt + c = 0
+      // -2bt + c = 0
+      // t = c / 2b
+      let t = c / (2.0 * b);
+      if (t >= 0.0 && t <= 1.0) {
+        let xt = computeX(x0, x1, x2, t);
+        if (xt > 0.0) {
+          if (b > 0.0) {
+            winding += 1; 
+          } else {
+            winding -= 1;
+          }
+        }
+      }
       continue;
     }
     // d/dt of Cy(t0) = -2 * sqrt(b^2 - ac)
@@ -89,13 +107,13 @@ fn computeX(x0: f32, x1: f32, x2: f32, t: f32) -> f32 {
       let xt0 = computeX(x0, x1, x2, t0);
       // Comparing > 0, since we centered
       // all of the curve points w.r.t. pos
-      if (xt0 > 0) {
+      if (xt0 > 0.0) {
         winding = winding + 1;
       }
     }
     if (t1 <= 1 && t1 >= 0) {
       let xt1 = computeX(x0, x1, x2, t1);
-      if (xt1 > 0) {
+      if (xt1 > 0.0) {
         winding = winding - 1;
       }
     }

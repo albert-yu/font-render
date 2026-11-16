@@ -50,7 +50,7 @@ async function main() {
   });
 
   // Read the font data
-  const LETTER = "R";
+  const LETTER = "Z";
   const glyph = font.charToGlyph(LETTER);
   const curves = convertCommandsToCurves(glyph.path.commands);
   console.log(glyph.path.commands, curves);
