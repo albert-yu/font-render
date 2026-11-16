@@ -27,6 +27,10 @@ struct Curve {
   return output;
 }
 
+fn computeX(x0: f32, x1: f32, x2: f32, t: f32) -> f32 {
+  return (1-t)*(1-t) * x0 + 2*t*(1-t) * x1 + t*t * x2;
+}
+
 @fragment fn fs(output: VertexOutput) -> @location(0) vec4f {
   let curveCount = arrayLength(&curves);
 
@@ -36,7 +40,8 @@ struct Curve {
 
   for (var i = 0u; i < curveCount; i++) {
     let curve = curves[i];
-    // offset by pos
+    // offset by pos to compute
+    // everything relative to the current point
     let p0 = curve.p0 - pos;
     let p1 = curve.p1 - pos;
     let p2 = curve.p2 - pos;
@@ -77,11 +82,18 @@ struct Curve {
     // So t1 is always an entrance, and t0 is always an exit.
     let t0 = (b - sqrt(b*b - a*c)) / a;
     let t1 = (b + sqrt(b*b - a*c)) / a;
+
     if (t0 <= 1 && t0 >= 0) {
-      winding = winding + 1;
+      let xt0 = computeX(x0, x1, x2, t0);
+      if (xt0 > 0) {
+        winding = winding + 1;
+      }
     }
     if (t1 <= 1 && t1 >= 0) {
-      winding = winding - 1;
+      let xt1 = computeX(x0, x1, x2, t1);
+      if (xt1 > 0) {
+        winding = winding - 1;
+      }
     }
   }
 
@@ -90,3 +102,4 @@ struct Curve {
   }
   return vec4f(1.0, 0.0, 0.0, 1.0);
 }
+
