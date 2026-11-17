@@ -53,7 +53,6 @@ async function main() {
   const LETTER = "家";
   const glyph = font.charToGlyph(LETTER);
   const curves = convertCommandsToCurves(glyph.path.commands);
-  console.log(glyph.path.commands, curves);
   const { xMin = 0, xMax = 0, yMin = 0, yMax = 0 } = glyph;
 
   const FLOATS_PER_VERTEX = 2;
@@ -198,8 +197,6 @@ async function main() {
       },
     ],
   };
-
-  // const { xMin, xMax, yMin, yMax } = glyph;
 
   function render() {
     device.queue.writeBuffer(uniformBuffer, 0, transform);

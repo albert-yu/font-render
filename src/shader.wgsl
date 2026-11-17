@@ -30,7 +30,7 @@ struct Curve {
 }
 
 fn computeX(x0: f32, x1: f32, x2: f32, t: f32) -> f32 {
-  return (1-t)*(1-t) * x0 + 2*t*(1-t)*x1 + t*t*x2;
+  return (1-t)*(1-t)*x0 + 2*t*(1-t)*x1 + t*t*x2;
 }
 
 @fragment fn fs(output: VertexOutput) -> @location(0) vec4f {
@@ -108,13 +108,13 @@ fn computeX(x0: f32, x1: f32, x2: f32, t: f32) -> f32 {
       // Comparing > 0, since we centered
       // all of the curve points w.r.t. pos
       if (xt0 > 0.0) {
-        winding = winding + 1;
+        winding += 1;
       }
     }
     if (t1 <= 1 && t1 >= 0) {
       let xt1 = computeX(x0, x1, x2, t1);
       if (xt1 > 0.0) {
-        winding = winding - 1;
+        winding -= 1;
       }
     }
   }
