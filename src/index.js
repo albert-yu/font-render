@@ -50,7 +50,7 @@ async function main() {
   });
 
   // Read the font data
-  const LETTER = "Z";
+  const LETTER = "家";
   const glyph = font.charToGlyph(LETTER);
   const curves = convertCommandsToCurves(glyph.path.commands);
   console.log(glyph.path.commands, curves);
@@ -225,7 +225,9 @@ async function main() {
 main();
 
 async function fetchFont() {
-  const res = await fetch("static/fonts/Inter/Inter_18pt-Medium.ttf");
+  const res = await fetch(
+    "static/fonts/NotoSerifSC/NotoSerifSC-VariableFont_wght.ttf",
+  );
   const buf = await res.arrayBuffer();
   const font = parse(buf);
   return font;
