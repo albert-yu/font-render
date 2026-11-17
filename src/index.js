@@ -1,8 +1,9 @@
 import { parse } from "opentype.js";
-import { mat4 } from "webgpu-matrix";
+import { mat4, vec3 } from "webgpu-matrix";
 import shaderCode from "./shader.wgsl?raw";
 
 /** @import { PathCommand } from "opentype.js" */
+/** @import { Mat4 } from "webgpu-matrix" */
 
 /**
  * @typedef {{ x0: number; y0: number; x1: number; y1: number; x2: number; y2: number }} Curve
@@ -88,6 +89,8 @@ async function main() {
     -1,
     1,
   );
+
+  handlePanZoom(canvas, transform);
 
   const uniformBuffer = device.createBuffer({
     size: transform.byteLength,
@@ -214,9 +217,10 @@ async function main() {
 
     const commandBuffer = encoder.finish();
     device.queue.submit([commandBuffer]);
+    requestAnimationFrame(render);
   }
 
-  render();
+  requestAnimationFrame(render);
 }
 
 main();
@@ -290,4 +294,29 @@ function convertCommandsToCurves(commands) {
     }
   }
   return curves;
+}
+
+/**
+ * @param {HTMLCanvasElement} canvas
+ * @param {Mat4} transform
+ * @returns {() => void} cleanup
+ */
+function handlePanZoom(canvas, transform) {
+  /**
+   * @param {WheelEvent} e
+   */
+  const handleWheel = (e) => {
+    if (e.ctrlKey) {
+      // TODO: handle zoom
+      return;
+    }
+    const SCROLL_SPEED = 5;
+    const dx = e.deltaX * -SCROLL_SPEED;
+    const dy = e.deltaY * SCROLL_SPEED;
+    mat4.translate(transform, vec3.create(dx, dy), transform);
+  };
+  canvas.addEventListener("wheel", handleWheel);
+  return () => {
+    canvas.removeEventListener("wheel", handleWheel);
+  };
 }
