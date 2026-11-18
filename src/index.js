@@ -227,7 +227,7 @@ main();
 
 async function fetchFont() {
   const res = await fetch(
-    "static/fonts/NotoSerifSC/NotoSerifSC-VariableFont_wght.ttf",
+    "fonts/NotoSerifSC/NotoSerifSC-VariableFont_wght.ttf",
   );
   const buf = await res.arrayBuffer();
   const font = parse(buf);
