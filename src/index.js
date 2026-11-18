@@ -309,19 +309,25 @@ function handlePanZoom(canvas, transform) {
     e.preventDefault();
     if (e.ctrlKey) {
       const dy = -e.deltaY;
-      const ZOOM_SPEED = 0.25;
+      const ZOOM_SPEED = 0.01;
 
-      const [currK] = mat4.getScaling(transform);
+      // const [currK] = mat4.getScaling(transform);
       const dk = Math.pow(2, dy * ZOOM_SPEED);
 
       const scale = mat4.scaling([dk, dk, 1]);
-      mat4.multiply(scale, transform, transform);
 
-      // const tp = mat4.translation([e.clientX, e.clientY, 0]);
-      // const invTp = mat4.inverse(tp);
-      // const t = mat4.multiply(tp, mat4.multiply(scale, invTp));
-      // mat4.multiply(t, transform, transform);
-      // console.log({ transform });
+      const rect = canvas.getBoundingClientRect();
+      // Map points to [-1, 1] clip space
+      const ptX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      // y-axis in screen space is inverted.
+      // It increases as it goes down, but in clip space,
+      // it's the opposite.
+      const ptY = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+
+      const tp = mat4.translation([ptX, ptY, 0]);
+      const invTp = mat4.inverse(tp);
+      const t = mat4.multiply(tp, mat4.multiply(scale, invTp));
+      mat4.multiply(t, transform, transform);
       return;
     }
     const SCROLL_SPEED = 5;
