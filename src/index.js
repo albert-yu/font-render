@@ -306,8 +306,22 @@ function handlePanZoom(canvas, transform) {
    * @param {WheelEvent} e
    */
   const handleWheel = (e) => {
+    e.preventDefault();
     if (e.ctrlKey) {
-      // TODO: handle zoom
+      const dy = -e.deltaY;
+      const ZOOM_SPEED = 0.25;
+
+      const [currK] = mat4.getScaling(transform);
+      const dk = Math.pow(2, dy * ZOOM_SPEED);
+
+      const scale = mat4.scaling([dk, dk, dk]);
+      mat4.multiply(scale, transform, transform);
+
+      // const tp = mat4.translation([e.clientX, e.clientY, 0]);
+      // const invTp = mat4.inverse(tp);
+      // const t = mat4.multiply(tp, mat4.multiply(scale, invTp));
+      // mat4.multiply(t, transform, transform);
+      // console.log({ transform });
       return;
     }
     const SCROLL_SPEED = 5;
