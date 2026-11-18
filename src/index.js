@@ -311,7 +311,6 @@ function handlePanZoom(canvas, transform) {
       const dy = -e.deltaY;
       const ZOOM_SPEED = 0.01;
 
-      // const [currK] = mat4.getScaling(transform);
       const dk = Math.pow(2, dy * ZOOM_SPEED);
 
       const scale = mat4.scaling([dk, dk, 1]);
@@ -330,9 +329,10 @@ function handlePanZoom(canvas, transform) {
       mat4.multiply(t, transform, transform);
       return;
     }
-    const SCROLL_SPEED = 5;
-    const dx = e.deltaX * -SCROLL_SPEED;
-    const dy = e.deltaY * SCROLL_SPEED;
+    const SCROLL_SPEED = 0.005;
+    const [k] = mat4.getScaling(transform);
+    const dx = (e.deltaX * -SCROLL_SPEED * 1) / k;
+    const dy = (e.deltaY * SCROLL_SPEED * 1) / k;
     mat4.translate(transform, vec3.create(dx, dy), transform);
   };
   canvas.addEventListener("wheel", handleWheel);
