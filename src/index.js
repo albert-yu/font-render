@@ -314,7 +314,7 @@ function handlePanZoom(canvas, transform) {
       const [currK] = mat4.getScaling(transform);
       const dk = Math.pow(2, dy * ZOOM_SPEED);
 
-      const scale = mat4.scaling([dk, dk, dk]);
+      const scale = mat4.scaling([dk, dk, 1]);
       mat4.multiply(scale, transform, transform);
 
       // const tp = mat4.translation([e.clientX, e.clientY, 0]);
