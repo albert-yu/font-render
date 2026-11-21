@@ -158,9 +158,6 @@ async function main() {
     bindGroupLayouts: [bindGroupLayout],
   });
 
-  /**
-   * Four bytes per float, four floats per vertex
-   */
   const arrayStride = FLOATS_PER_VERTEX * BYTES_PER_FLOAT;
 
   const pipeline = device.createRenderPipeline({
