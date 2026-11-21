@@ -1,8 +1,7 @@
 # Font render
 
 > [!NOTE]
-> I did not use LLMs to author any of the code, but I did use
-> it to help me understand the concepts.
+> No LLMs were used in authoring the code
 
 Rendering a font using WebGPU and JavaScript, based
 primarily on [GreenLightning's C++/GLSL project][green-lightning].
